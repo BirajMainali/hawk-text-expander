@@ -1,0 +1,53 @@
+{
+    "manifest_version": 3,
+    "name": "Hawknote",
+    "version": "1.0",
+    "description": "A brief description of your extension's functionality.",
+    "author": "Biraj Mainali",
+    "action": {
+        "default_popup": "./ui/index.html",
+        "default_icon": {
+            "16": "icons/icon.png",
+            "48": "icons/icon.png",
+            "128": "icons/icon.png"
+        }
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "./script/store.js",
+                "./script/script.js",
+                "./script/app.js"
+            ],
+            "css": [
+                "./ui/styles.css"
+            ]
+        }
+    ],
+    "permissions": [
+        "activeTab",
+        "storage"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "icons": {
+        "16": "icons/icon.png",
+        "48": "icons/icon.png",
+        "128": "icons/icon.png"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "*.js",
+                "*.css"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}
