@@ -60,7 +60,7 @@ const handleKeydown = (e) => {
         insertTextAtCursor(activeElement, ctx);
     }
 
-    setCursorToBraces(activeElement || document.querySelector('#input'));
+    setCursorToBraces(activeElement);
 };
 
 
