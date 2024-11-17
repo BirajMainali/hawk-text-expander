@@ -3,44 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Shortcut Manager</title>
-    <link rel="stylesheet" href="./styles.css">
+    <title>Hawk Note</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .card {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .card-header {
+            background-color: #337ab7;
+            color: #fff;
+            padding: 10px;
+            font-size: 1.5em;
+            text-align: center;
+            border-bottom: 2px solid #2a6496;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .btn-save {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+        }
+
+        .btn-save:hover {
+            background-color: #4cae4c;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Text Shortcuts</h1>
-            <button id="addShortcutBtn" class="btn-add">Add Shortcut</button>
-        </header>
-
-        <div class="shortcut-form" id="shortcutForm">
-            <div class="form-group">
-                <label for="shortcutKey">Shortcut Key</label>
-                <input type="text" id="shortcutKey" placeholder="e.g., hw" maxlength="20">
-            </div>
-            <div class="form-group">
-                <label for="shortcutText">Expanded Text</label>
-                <textarea id="shortcutText" placeholder="e.g., Hello World" rows="3"></textarea>
-            </div>
-            <div class="form-actions">
-                <button id="saveShortcutBtn" class="btn-save">Save</button>
-                <button id="cancelBtn" class="btn-cancel">Cancel</button>
-            </div>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            Promptly - A Simple Text Expander - Variables and Shortcuts
         </div>
-
-        <div class="shortcuts-container">
-            <div class="shortcuts-header">
-                <div class="shortcut-key-header">Shortcut</div>
-                <div class="shortcut-text-header">Expanded Text</div>
-                <div class="shortcut-actions-header">Actions</div>
-            </div>
-            <div class="shortcuts-list" id="shortcutsList">
-                <!-- Shortcuts will be dynamically inserted here -->
-            </div>
+        <div class="card-body">
+            <form id="shortcutForm">
+                <div class="form-group">
+                    <label for="shortcutInput">Shortcut</label>
+                    <input name="shortcut" type="text" class="form-control" id="shortcutInput"
+                           placeholder="Enter shortcut (e.g., 'tx')" required>
+                </div>
+                <div class="form-group">
+                    <label for="textInput">Text</label>
+                    <textarea name="text" class="form-control" id="textInput" rows="4"
+                              placeholder="Enter the full text (e.g., 'Thanks!')" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-save btn-block">Save Shortcut</button>
+            </form>
+            <hr>
+            <h3>Saved Shortcuts</h3>
+            <table class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th>Shortcut</th>
+                    <th>Text</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="shortcuts">
+                </tbody>
+            </table>
+            <template id="shortcutTemplate">
+                <tr>
+                    <td>
+                        <span id="shortcut"></span>
+                    </td>
+                    <td>
+                        <span id="text"></span>
+                    </td>
+                    <td>
+                        <button id="edit" class="btn btn-primary btn-sm">Edit</button>
+                        <button id="delete" class="btn btn-danger btn-sm">Delete</button>
+                    </td>
+                </tr>
+            </template>
         </div>
     </div>
-    <script src="../script/store.js"></script>
-    <script src="../script/script.js"></script>
-    <script src="../script/app.js"></script>
+</div>
+
+<script src="../scripts/store.js"></script>
+<script src="../scripts/site.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (e) => {
+        const elems = {
+            form: document.querySelector("#shortcutForm"),
+            shortcuts: document.querySelector("#shortcuts"),
+            rowTemplate: document.querySelector("#shortcutTemplate")
+        }
+
+        const {set, remove, getAll} = promptlyStorage();
+
+        elems.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = getFormData(elems.form);
+            set(formData.shortcut, formData.text);
+            elems.form.reset();
+            // [TODO] improve the code to avoid reloading all the shortcuts
+            loadShortcuts();
+        });
+
+
+        const loadShortcuts = () => {
+            const shortcuts = getAll();
+            elems.shortcuts.innerHTML = "";
+            for (const item of shortcuts) {
+                const rowElm = elems.rowTemplate.content.cloneNode(true);
+
+                rowElm.querySelector("#shortcut").textContent = item.key;
+                rowElm.querySelector("#text").textContent = item.value;
+
+                rowElm.querySelector("#edit").addEventListener('click', () => {
+                    elems.form.shortcut.value = item.key;
+                    elems.form.text.value = item.value;
+                });
+                rowElm.querySelector("#delete").addEventListener('click', () => {
+                    remove(item.key);
+                    loadShortcuts();
+                });
+
+                elems.shortcuts.appendChild(rowElm);
+            }
+        };
+
+        loadShortcuts();
+
+    })
+
+    const getFormData = form =>
+        Object.fromEntries(
+            [...form.querySelectorAll("input, textarea")].map(
+                ({name, value}) => [
+                    name,
+                    value
+                ]
+            )
+        );
+
+</script>
+
 </body>
 </html>
