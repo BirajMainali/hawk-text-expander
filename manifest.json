@@ -19,7 +19,11 @@
       ],
       "js": [
         "./scripts/store.js",
-        "./scripts/site.js"
+        "./scripts/site.js",
+        "./scripts/script.js"
+      ],
+      "css": [
+        "./styles/site.css"
       ]
     }
   ],

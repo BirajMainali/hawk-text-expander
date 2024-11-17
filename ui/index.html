@@ -1,162 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hawk Note</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <style>
-        body {
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            margin-top: 20px;
-        }
-
-        .card {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border: none;
-        }
-
-        .card-header {
-            background-color: #337ab7;
-            color: #fff;
-            padding: 10px;
-            font-size: 1.5em;
-            text-align: center;
-            border-bottom: 2px solid #2a6496;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .btn-save {
-            background-color: #5cb85c;
-            color: white;
-            border: none;
-        }
-
-        .btn-save:hover {
-            background-color: #4cae4c;
-        }
-    </style>
+    <title>Promptly - A Simple Text Expander - Variables and Shortcuts</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../styles/site.css" rel="stylesheet">
 </head>
+<body>
 <div class="container">
-    <div class="card">
-        <div class="card-header">
-            Promptly - A Simple Text Expander - Variables and Shortcuts
-        </div>
-        <div class="card-body">
-            <form id="shortcutForm">
-                <div class="form-group">
-                    <label for="shortcutInput">Shortcut</label>
-                    <input name="shortcut" type="text" class="form-control" id="shortcutInput"
-                           placeholder="Enter shortcut (e.g., 'tx')" required>
-                </div>
-                <div class="form-group">
-                    <label for="textInput">Text</label>
-                    <textarea name="text" class="form-control" id="textInput" rows="4"
-                              placeholder="Enter the full text (e.g., 'Thanks!')" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-save btn-block">Save Shortcut</button>
-            </form>
-            <hr>
-            <h3>Saved Shortcuts</h3>
-            <table class="table table-bordered table-hover">
-                <thead>
-                <tr>
-                    <th>Shortcut</th>
-                    <th>Text</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody id="shortcuts">
-                </tbody>
-            </table>
-            <template id="shortcutTemplate">
-                <tr>
-                    <td>
-                        <span id="shortcut"></span>
-                    </td>
-                    <td>
-                        <span id="text"></span>
-                    </td>
-                    <td>
-                        <button id="edit" class="btn btn-primary btn-sm">Edit</button>
-                        <button id="delete" class="btn btn-danger btn-sm">Delete</button>
-                    </td>
-                </tr>
-            </template>
-        </div>
+    <div class="text-center">
+        <h1 class="text-2xl font-semibold text-gray-700">Promptly - A Simple Text Expander</h1>
+        <p class="text-sm text-gray-500 mt-2">Create shortcuts for your frequently used phrases</p>
     </div>
+
+    <form id="shortcutForm" class="space-y-4">
+        <div class="space-y-1">
+            <label for="shortcutInput" class="text-sm font-medium text-gray-700">Shortcut</label>
+            <input name="shortcut" type="text" id="shortcutInput" placeholder="Enter shortcut (e.g., 'tx')" required>
+        </div>
+        <div class="space-y-1">
+            <label for="textInput" class="text-sm font-medium text-gray-700">Text</label>
+            <textarea name="text" id="textInput" rows="4" placeholder="Enter the full text (e.g., 'Thanks!')"
+                      required></textarea>
+        </div>
+        <button type="submit"
+                class="bg-gray-800 text-white py-3 rounded-md text-lg font-semibold hover:bg-gray-700 transition duration-300">
+            Save Shortcut
+        </button>
+    </form>
+
+    <hr class="my-6 border-gray-300">
+
+    <h3 class="text-xl font-semibold text-gray-700">Saved Shortcuts (Temporary)</h3>
+
+    <div id="shortcuts">
+        <!-- Shortcut items will be rendered here -->
+    </div>
+
+    <template id="shortcutTemplate">
+        <div class="shortcut-item">
+            <div>
+                <h5 class="text-lg font-medium text-gray-700" id="shortcut"></h5>
+                <p class="text-gray-600" id="text"></p>
+            </div>
+            <div class="flex space-x-4">
+                <button id="edit" class="text-sm font-semibold text-gray-700">Edit</button>
+                <button id="delete" class="text-sm font-semibold text-red-500">Delete</button>
+            </div>
+        </div>
+    </template>
 </div>
 
 <script src="../scripts/store.js"></script>
 <script src="../scripts/site.js"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', (e) => {
-        const elems = {
-            form: document.querySelector("#shortcutForm"),
-            shortcuts: document.querySelector("#shortcuts"),
-            rowTemplate: document.querySelector("#shortcutTemplate")
-        }
-
-        const {set, remove, getAll} = promptlyStorage();
-
-        elems.form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = getFormData(elems.form);
-            set(formData.shortcut, formData.text);
-            elems.form.reset();
-            // [TODO] improve the code to avoid reloading all the shortcuts
-            loadShortcuts();
-        });
-
-
-        const loadShortcuts = () => {
-            const shortcuts = getAll();
-            elems.shortcuts.innerHTML = "";
-            for (const item of shortcuts) {
-                const rowElm = elems.rowTemplate.content.cloneNode(true);
-
-                rowElm.querySelector("#shortcut").textContent = item.key;
-                rowElm.querySelector("#text").textContent = item.value;
-
-                rowElm.querySelector("#edit").addEventListener('click', () => {
-                    elems.form.shortcut.value = item.key;
-                    elems.form.text.value = item.value;
-                });
-                rowElm.querySelector("#delete").addEventListener('click', () => {
-                    remove(item.key);
-                    loadShortcuts();
-                });
-
-                elems.shortcuts.appendChild(rowElm);
-            }
-        };
-
-        loadShortcuts();
-
-    })
-
-    const getFormData = form =>
-        Object.fromEntries(
-            [...form.querySelectorAll("input, textarea")].map(
-                ({name, value}) => [
-                    name,
-                    value
-                ]
-            )
-        );
-
-</script>
-
+<script src="../scripts/script.js"></script>
 </body>
 </html>

@@ -38,15 +38,18 @@ const setCursorToBraces = (element) => {
     }
 };
 
-const handleKeydown = (e) => {
+const handleKeydown = async (e) => {
     if (e.key !== ACTION_KEY) return;
 
     const selectedText = getSelectedText();
+
+    const item = await get(selectedText);
     if (!selectedText.length) return;
 
+    if (!item || !item.value) return;
 
-    const ctx = get(selectedText).value;
-    if (!ctx) return;
+    const ctx = item.value;
+    e.preventDefault();
 
     e.preventDefault();
 
